@@ -131,12 +131,16 @@ var jsPsychPluginWheel = (function (jspsych) {
       let isCooldown = false;
       let spinCount = 0;
 
+      if (!trial.isDot) {
+        redDot.style.visibility = "hidden";
+      };
+
       const startSpinSequence = () => {
         if (spinCount < 3) {
           cooldown();
         } else {
           display_element.innerHTML = "";
-          this.jsPsych.finishTrial({ blinkCount });
+          this.jsPsych.finishTrial({ blinkCount, angle, spinSpeed: trial.spinSpeed });
         }
       };
 
@@ -194,7 +198,7 @@ var jsPsychPluginWheel = (function (jspsych) {
       // Start the trial
       startSpinSequence();
       spin();
-      blinkPauseInterval(); // Start the blinking process
+      if (trial.isDot) {blinkPauseInterval()}; // Start the blinking process
     }
   }
   WheelPlugin.info = info;

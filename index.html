@@ -20,9 +20,16 @@
   <script>
 
     const jsPsych = initJsPsych();
+
     var timeline = [];
-    var spin_speeds = [6,6,6,9,9,9,12,12,12];
-    const DO_DOT = true;
+    var spin_speeds = [];
+    // 18 blocks (6 * 3, 6 of each speed)
+    for (let i = 0; i < 6; i++) {
+      spin_speeds.push(6); //low speed
+      spin_speeds.push(8); //med speed
+      spin_speeds.push(10); //high speed
+    };
+    const DO_DOT = Math.random() > 0.5; //random chance of being assigned to either group
 
     const hello_msg = {
       type: jsPsychHtmlKeyboardResponse,
@@ -30,11 +37,11 @@
     };
     timeline.push(hello_msg);
 
-    const instructions_dot = {
+    const instructions_no_dot = {
       type: jsPsychHtmlKeyboardResponse,
       stimulus: '<div style="max-width: 900px; margin: auto;"><p>In the following experiment you will be shown a grey circle with two lines, one that is static, and one that spins. You will be asked to stop the moving line as close as possible to the still line by pressing the spacebar.</p><p>Each time you must press the spacebar to stop the moving line, and press it once again to restart. The circle will change color and not respond for a brief second after restarting.</p><p>Every three times you stop the moving line you will have completed a block. At the end of each block you will be prompted to rate your control over the task using a 1-5 scale, a score of 1 indicates no control and a score of 5 indicates full control.</p><p>Press any key to begin.</p></div>'
     };
-    const instructions_no_dot = {
+    const instructions_dot = {
       type: jsPsychHtmlKeyboardResponse,
       stimulus: '<div style="max-width: 900px; margin: auto;"><p>In the following experiment you will be shown a grey circle with two lines, one that is static, and one that spins. You will be asked to stop the moving line as close as possible to the still line by pressing the spacebar.</p><p>Each time you must press the spacebar to stop the moving line, and press it once again to restart. The circle will change color and not respond for a brief second after restarting.</p><p>Every three times you stop the moving line you will have completed a block. At the end of each block you will be prompted to rate your control over the task using a 1-5 scale, a score of 1 indicates no control and a score of 5 indicates full control.</p><p>While you are doing this a red dot will flash every few seconds in the center of the spinning wheel. Do your best to keep track of the number of times it flashes. At the end of each block you will be asked to report this number.</p><p>Press any key to begin.</p></div>'
     };
@@ -50,8 +57,8 @@
       type: jsPsychPluginWheel,
       spinSpeed: jsPsych.timelineVariable('spinSpeed'),
       cooldownDuration: 2000,
-      blinkDuration: 200,
-      blinkPauseMin: 400,
+      blinkDuration: 300,
+      blinkPauseMin: 800,
       blinkPauseMax: 2000,
       isDot: DO_DOT
     }; 
@@ -65,9 +72,7 @@
       }],
       on_finish: function(data) {
         reported_dot_count = data.response.reported_dot_count;
-        jsPsych.data.addProperties({
-          reportedDotCount: data.response.reported_dot_count
-        });
+
       }
     };
 
