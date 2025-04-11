@@ -30,6 +30,11 @@ var jsPsychPluginWheel = (function (jspsych) {
         default: 2000,
         description: "Maximum pause duration between blinks in milliseconds",
       },
+      isDot: {
+        type: jspsych.ParameterType.BOOL,
+        default: false,
+        description: "Whether to show the red dot or not",  
+      }
     },
   };
 
@@ -124,6 +129,43 @@ var jsPsychPluginWheel = (function (jspsych) {
       let angle = 0;
       let spinning = true;
       let isCooldown = false;
+      let spinCount = 0;
+
+      const startSpinSequence = () => {
+        if (spinCount < 3) {
+          cooldown();
+        } else {
+          display_element.innerHTML = "";
+          this.jsPsych.finishTrial({ blinkCount });
+        }
+      };
+
+      function cooldown() {
+        isCooldown = true;
+        circle.classList.add("cooldown");
+        line.classList.add("cooldown");
+        dot.classList.add("cooldown");
+
+        spinning = true;
+        setTimeout(() => {
+          circle.classList.remove("cooldown");
+          line.classList.remove("cooldown");
+          dot.classList.remove("cooldown");
+          isCooldown = false;
+        }, trial.cooldownDuration);
+      }
+
+      document.addEventListener("keydown", (event) => {
+        if (event.code === "Space" && !isCooldown) {
+          if (spinning) {
+            spinning = false;
+            setTimeout(() => {
+              spinCount++;
+              startSpinSequence();
+            }, 500); // Pause 500ms before next spin
+          }
+        }
+      });
 
       function spin() {
         if (spinning) {
@@ -149,41 +191,10 @@ var jsPsychPluginWheel = (function (jspsych) {
         setTimeout(blinkRedDot, pauseDuration);
       }
 
-      function cooldown() {
-        isCooldown = true;
-        circle.classList.add("cooldown");
-        line.classList.add("cooldown");
-        dot.classList.add("cooldown");
-
-        spinning = true;
-        setTimeout(() => {
-          circle.classList.remove("cooldown");
-          line.classList.remove("cooldown");
-          dot.classList.remove("cooldown");
-          isCooldown = false;
-        }, trial.cooldownDuration);
-      }
-
-      document.addEventListener("keydown", (event) => {
-        if (event.code === "Space" && !isCooldown) {
-          if (spinning) {
-            spinning = false;
-          } else {
-            cooldown();
-          }
-        }
-      });
-
       // Start the trial
-      cooldown();
+      startSpinSequence();
       spin();
       blinkPauseInterval(); // Start the blinking process
-
-      // End trial after a fixed duration
-      setTimeout(() => {
-        display_element.innerHTML = "";
-        this.jsPsych.finishTrial();
-      }, 10000); // Example: 10 seconds
     }
   }
   WheelPlugin.info = info;

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My experiment</title>
+    <script src="https://unpkg.com/jspsych@8.2.1"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
+    <script src="https://unpkg.com/@jspsych-contrib/plugin-survey-number@2.0.0"></script>
+    <link href="https://unpkg.com/jspsych@8.2.1/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <script src="./index.js"></script>
+  </head>
+  <style>
+    body {
+      background-color: rgb(191,191,191);
+    }
+    .no-cursor {
+      cursor: none;
+    }
+  </style>
+  <body></body>
+  <script>
+
+    const jsPsych = initJsPsych();
+    var timeline = [];
+    var spin_speeds = [6,6,6,9,9,9,12,12,12];
+    const DO_DOT = true;
+
+    const hello_msg = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: '<p>Hello! Thank you for participating in our study.</p><p>Press any key to begin.</p>'
+    };
+    timeline.push(hello_msg);
+
+    const instructions_dot = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: '<div style="max-width: 900px; margin: auto;"><p>In the following experiment you will be shown a grey circle with two lines, one that is static, and one that spins. You will be asked to stop the moving line as close as possible to the still line by pressing the spacebar.</p><p>Each time you must press the spacebar to stop the moving line, and press it once again to restart. The circle will change color and not respond for a brief second after restarting.</p><p>Every three times you stop the moving line you will have completed a block. At the end of each block you will be prompted to rate your control over the task using a 1-5 scale, a score of 1 indicates no control and a score of 5 indicates full control.</p><p>Press any key to begin.</p></div>'
+    };
+    const instructions_no_dot = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: '<div style="max-width: 900px; margin: auto;"><p>In the following experiment you will be shown a grey circle with two lines, one that is static, and one that spins. You will be asked to stop the moving line as close as possible to the still line by pressing the spacebar.</p><p>Each time you must press the spacebar to stop the moving line, and press it once again to restart. The circle will change color and not respond for a brief second after restarting.</p><p>Every three times you stop the moving line you will have completed a block. At the end of each block you will be prompted to rate your control over the task using a 1-5 scale, a score of 1 indicates no control and a score of 5 indicates full control.</p><p>While you are doing this a red dot will flash every few seconds in the center of the spinning wheel. Do your best to keep track of the number of times it flashes. At the end of each block you will be asked to report this number.</p><p>Press any key to begin.</p></div>'
+    };
+
+    if (DO_DOT) {
+      timeline.push(instructions_dot);
+    } else {
+      timeline.push(instructions_no_dot);
+    }
+
+    
+    const wheel = {
+      type: jsPsychPluginWheel,
+      spinSpeed: jsPsych.timelineVariable('spinSpeed'),
+      cooldownDuration: 2000,
+      blinkDuration: 200,
+      blinkPauseMin: 400,
+      blinkPauseMax: 2000,
+      isDot: DO_DOT
+    }; 
+
+    var dot_number_entry = {
+      type: jsPsychSurveyNumber,
+      questions: [{
+          prompt: 'How many times did the red dot blink?',
+          name: 'reported_dot_count',
+          required: true,
+      }],
+      on_finish: function(data) {
+        reported_dot_count = data.response.reported_dot_count;
+        jsPsych.data.addProperties({
+          reportedDotCount: data.response.reported_dot_count
+        });
+      }
+    };
+
+    var dot_entry_cond = {
+      timeline: [dot_number_entry],
+      conditional_function: function() {
+        return DO_DOT;
+      }
+    };
+
+    var rating_scale_visualization = `
+      <svg height="200" width="600">
+        <g transform="translate(50 0)">
+          <g transform="translate(30 50) scale(1 1)">
+            <text x="0" y="0" fill="black" font-size="30">1</text>
+            <text x="100" y="0" fill="black" font-size="30">2</text>
+            <text x="200" y="0" fill="black" font-size="30">3</text>
+            <text x="300" y="0" fill="black" font-size="30">4</text>
+            <text x="400" y="0" fill="black" font-size="30">5</text>
+          </g>
+          <g transform="translate(-60 60) scale(1 1)">
+            <line x1="100" y1="50" x2="500" y2="50" style="stroke:black;stroke-width:2" />
+            <line x1="100" y1="1" x2="100" y2="50" style="stroke:black;stroke-width:2" />
+            <line x1="200" y1="1" x2="200" y2="50" style="stroke:black;stroke-width:2" />
+            <line x1="300" y1="1" x2="300" y2="50" style="stroke:black;stroke-width:2" />
+            <line x1="400" y1="1" x2="400" y2="50" style="stroke:black;stroke-width:2" />
+            <line x1="500" y1="1" x2="500" y2="50" style="stroke:black;stroke-width:2" />
+          </g>
+          <g transform="translate(30 150) scale(1 1)">
+            <text x="-20" y="0" fill="black" font-size="20">No control at all</text>
+            <text x="300" y="0" fill="black" font-size="20">Perfect control</text>
+          </g>
+        </g>
+      </svg>`
+    
+    var rating = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: "Please rate how much control you had over the task.",
+      prompt: rating_scale_visualization,
+      choices: ['1', '2', '3', '4', '5'],
+      data: {
+        task: 'rating'
+      },
+    }
+
+    const block = {
+      timeline: [wheel, rating, dot_entry_cond],
+      timeline_variables: spin_speeds.map(speed => ({ spinSpeed: speed })),
+      randomize_order: true,
+      on_finish: function(data) {
+        jsPsych.data.addProperties({
+          block: data.block,
+          spinSpeed: data.spinSpeed
+        });
+      }
+    };
+
+    timeline.push(block);
+
+
+    const final_message = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: '<div style="max-width: 900px; margin: auto;"><p>Thank you for participating!</p><p>This study was intended to test your sense of agency and attention based on your self reported level of control over the task. We are comparing the perceived level of control between a group completing a split attention task and a single task.</p><p>Again, thank you for your time. Press any key to finish.</p>'
+    };
+    timeline.push(final_message);
+
+    jsPsych.run(timeline);
+  </script>
+</html>
