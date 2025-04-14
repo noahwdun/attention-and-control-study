@@ -124,7 +124,7 @@ var jsPsychPluginWheel = (function (jspsych) {
 
       // JavaScript functionality
       const circle = document.getElementById("circle");
-      const line = document.getElementById("target-line");
+      const targetline = document.getElementById("target-line");
       const fixedLine = document.getElementById("fixed-line");
       const dot = document.getElementById("target-line-dot");
       const redDot = document.getElementById("red-dot");
@@ -151,14 +151,14 @@ var jsPsychPluginWheel = (function (jspsych) {
       function cooldown() {
         isCooldown = true;
         circle.classList.add("cooldown");
-        line.classList.add("cooldown");
+        targetLine.classList.add("cooldown");
         dot.classList.add("cooldown");
         fixedLine.classList.add("cooldown");
 
         spinning = true;
         setTimeout(() => {
           circle.classList.remove("cooldown");
-          line.classList.remove("cooldown");
+          targetLine.classList.remove("cooldown");
           dot.classList.remove("cooldown");
           fixedLine.classList.remove("cooldown");
           isCooldown = false;
