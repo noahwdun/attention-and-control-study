@@ -98,7 +98,7 @@ var jsPsychPluginWheel = (function (jspsych) {
         #fixed-line {
           width: 2px;
           height: 150px;
-          background-color: rgb(35, 230, 87);
+          background-color: black;
           position: absolute;
           top: 0;
           left: calc(50% - 1px);
