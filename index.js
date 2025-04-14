@@ -105,6 +105,9 @@ var jsPsychPluginWheel = (function (jspsych) {
           transform-origin: bottom;
           z-index: 0;
         }
+        #fixed-line.cooldown {
+          background-color: gray;
+        }
         #red-dot {
           width: 20px;
           height: 20px;
@@ -122,6 +125,7 @@ var jsPsychPluginWheel = (function (jspsych) {
       // JavaScript functionality
       const circle = document.getElementById("circle");
       const line = document.getElementById("target-line");
+      const fixedLine = document.getElementById("fixed-line");
       const dot = document.getElementById("target-line-dot");
       const redDot = document.getElementById("red-dot");
 
@@ -149,12 +153,14 @@ var jsPsychPluginWheel = (function (jspsych) {
         circle.classList.add("cooldown");
         line.classList.add("cooldown");
         dot.classList.add("cooldown");
+        fixedLine.classList.add("cooldown");
 
         spinning = true;
         setTimeout(() => {
           circle.classList.remove("cooldown");
           line.classList.remove("cooldown");
           dot.classList.remove("cooldown");
+          fixedLine.classList.remove("cooldown");
           isCooldown = false;
         }, trial.cooldownDuration);
       }
