@@ -124,7 +124,7 @@ var jsPsychPluginWheel = (function (jspsych) {
 
       // JavaScript functionality
       const circle = document.getElementById("circle");
-      const targetline = document.getElementById("target-line");
+      const targetLine = document.getElementById("target-line");
       const fixedLine = document.getElementById("fixed-line");
       const dot = document.getElementById("target-line-dot");
       const redDot = document.getElementById("red-dot");
@@ -152,6 +152,7 @@ var jsPsychPluginWheel = (function (jspsych) {
         isCooldown = true;
         circle.classList.add("cooldown");
         targetLine.classList.add("cooldown");
+        fixedLine.classList.add("cooldown");
         dot.classList.add("cooldown");
         fixedLine.classList.add("cooldown");
 
@@ -180,7 +181,7 @@ var jsPsychPluginWheel = (function (jspsych) {
       function spin() {
         if (spinning) {
           angle = (angle + trial.spinSpeed) % 360;
-          line.style.transform = `rotate(${angle}deg)`;
+          targetLine.style.transform = `rotate(${angle}deg)`;
         }
         requestAnimationFrame(spin);
       }
