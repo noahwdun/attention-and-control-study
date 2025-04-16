@@ -39,11 +39,11 @@
 
     const instructions_no_dot = {
       type: jsPsychHtmlKeyboardResponse,
-      stimulus: '<div style="max-width: 900px; margin: auto;"><p>In the following experiment you will be shown a grey circle with two lines, one that is static, and one that spins. You will be asked to stop the moving line as close as possible to the still line by pressing the spacebar.</p><p>Each time you must press the spacebar to stop the moving line, and press it once again to restart. The circle will change color and not respond for a brief second after restarting.</p><p>Every three times you stop the moving line you will have completed a block. At the end of each block you will be prompted to rate your control over the task using a 1-5 scale, a score of 1 indicates no control and a score of 5 indicates full control.</p><p>Press any key to begin.</p></div>'
+      stimulus: '<div style="max-width: 900px; margin: auto;"><p>In the following experiment you will be shown a grey circle with two lines, one that is static, and one that spins. You will be asked to stop the moving line as close as possible to the still line by pressing the spacebar.</p><p>Each time you must press the spacebar to stop the moving line, and press it once again to restart. The circle will change color and not respond for a brief second after restarting.</p><p>Every three times you stop the moving line you will have completed a trial. At the end of each trial you will be prompted to rate your control over the task using a 1-5 scale; a score of 1 indicates no control and a score of 5 indicates full control.</p><p>Press any key to begin.</p></div>'
     };
     const instructions_dot = {
       type: jsPsychHtmlKeyboardResponse,
-      stimulus: '<div style="max-width: 900px; margin: auto;"><p>In the following experiment you will be shown a grey circle with two lines, one that is static, and one that spins. You will be asked to stop the moving line as close as possible to the still line by pressing the spacebar.</p><p>Each time you must press the spacebar to stop the moving line, and press it once again to restart. The circle will change color and not respond for a brief second after restarting.</p><p>Every three times you stop the moving line you will have completed a block. At the end of each block you will be prompted to rate your control over the task using a 1-5 scale, a score of 1 indicates no control and a score of 5 indicates full control.</p><p>While you are doing this a red dot will flash every few seconds in the center of the spinning wheel. Do your best to keep track of the number of times it flashes. At the end of each block you will be asked to report this number.</p><p>Press any key to begin.</p></div>'
+      stimulus: '<div style="max-width: 900px; margin: auto;"><p>In the following experiment you will be shown a grey circle with two lines, one that is static, and one that spins. You will be asked to stop the moving line as close as possible to the still line by pressing the spacebar.</p><p>Each time you must press the spacebar to stop the moving line, and press it once again to restart. The circle will change color and not respond for a brief second after restarting.</p><p>Every three times you stop the moving line you will have completed a trial. At the end of each trial you will be prompted to rate your control over the task using a 1-5 scale; a score of 1 indicates no control and a score of 5 indicates full control.</p><p>While you are doing this a red dot will flash every few seconds in the center of the spinning wheel. Do your best to keep track of the number of times it flashes throughout the entire trial. At the end of each trial you will be asked to report this number.</p><p>Press any key to begin.</p></div>'
     };
 
     if (DO_DOT) {
@@ -52,7 +52,50 @@
       timeline.push(instructions_no_dot);
     }
 
-    
+    const practice_start = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: '<div style="max-width: 900px; margin: auto;"><p>After pressing any key, you will complete three practice trials, each trial is three instances of the stopping game. Use this time to familiarize yourself with the game.</p><p>Press any key to begin.</p></div>'
+    };
+    timeline.push(practice_start);
+
+    let averageDeviation = 0; // Declare a global variable
+
+    const practice_wheel = {
+      type: jsPsychPluginWheel,
+      spinSpeed: 6,
+      cooldownDuration: 2000,
+      blinkDuration: 300,
+      blinkPauseMin: 800,
+      blinkPauseMax: 2000,
+      isDot: DO_DOT,
+      on_finish: function() {
+
+        const practiceData = jsPsych.data.get().filter({ trial_type: 'plugin-wheel' }).select('angle').values;
+
+        //calculate the average deviation from vertical, treating angles close to 360 as negative
+      averageDeviation = practiceData.length > 0
+          ? practiceData.reduce((sum, value) => {
+              const adjustedValue = value > 180 ? 360 - value : value; //adj angles > 180
+              return sum + Math.abs(adjustedValue);
+            }, 0) / practiceData.length
+          : 0;
+      }
+    };
+    timeline.push(practice_wheel);
+
+    const main_block_start = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: function() {
+        return `<div style="max-width: 900px; margin: auto;">
+                  <p>After pressing any key, you will enter the main experiment, consisting of several trials of three spins each.</p>
+                  <p>Your average error during practice was <strong>${(averageDeviation / 1.8).toFixed(0)}</strong>%.</p>
+                  <p>From this point on, your accuracy in stopping the line will be recorded. Please try your best in each game!</p>
+                  <p>Press any key to begin.</p>
+                </div>`;
+      }
+    };
+    timeline.push(main_block_start);
+
     const wheel = {
       type: jsPsychPluginWheel,
       spinSpeed: jsPsych.timelineVariable('spinSpeed'),
@@ -123,19 +166,38 @@
       timeline_variables: spin_speeds.map(speed => ({ spinSpeed: speed })),
       randomize_order: true,
       on_finish: function(data) {
+        // Add block and spinSpeed properties to the data
         jsPsych.data.addProperties({
           block: data.block,
           spinSpeed: data.spinSpeed
         });
+
+        // Retrieve main trial data
+        const mainTrialData = jsPsych.data.get().filter({ trial_type: 'plugin-wheel' }).select('angle').values;
+
+        // Calculate the average deviation from vertical, treating angles close to 360 as negative
+        averageDeviation = mainTrialData.length > 0
+          ? mainTrialData.reduce((sum, value) => {
+              const adjustedValue = value > 180 ? 360 - value : value; // Adjust angles > 180
+              return sum + Math.abs(adjustedValue);
+            }, 0) / mainTrialData.length
+          : 0;
       }
     };
 
     timeline.push(block);
 
-
     const final_message = {
       type: jsPsychHtmlKeyboardResponse,
-      stimulus: '<div style="max-width: 900px; margin: auto;"><p>Thank you for participating!</p><p>This study was intended to test your sense of agency and attention based on your self reported level of control over the task. We are comparing the perceived level of control between a group completing a split attention task and a single task.</p><p>Again, thank you for your time. Press any key to finish.</p>'
+      stimulus: function() {
+        return `<div style="max-width: 900px; margin: auto;">
+                  <p>Thank you for participating!</p>
+                  <p>This study was intended to test your sense of agency and attention based on your self-reported level of control over the task.</p>
+                  <p>Your average error during the main experiment was <strong>${(averageDeviation / 1.8).toFixed(0)}</strong>%.</p>
+                  <p>We are comparing the perceived level of control between a group completing a split attention task and a single task.</p>
+                  <p>Again, thank you for your time. Press any key to finish.</p>
+                </div>`;
+      }
     };
     timeline.push(final_message);
 
